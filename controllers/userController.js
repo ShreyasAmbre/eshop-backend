@@ -11,7 +11,7 @@ export const register = async (req, res) => {
     const { firstName, lastName, email, password } = req.body;
 
     if (!firstName || !lastName || !email || !password) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "All fields are required",
       });
@@ -19,7 +19,7 @@ export const register = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (user) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "User already present",
       });
@@ -40,7 +40,7 @@ export const register = async (req, res) => {
     newUser.token = token;
 
     await newUser.save();
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "User created successfully",
       user: newUser,
@@ -48,7 +48,7 @@ export const register = async (req, res) => {
 
   } catch (error) {
     console.log("Register User Failed", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -59,7 +59,7 @@ export const verify = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer")) {
-      res.status(400).json({
+      return res.status(400).json({
         status: false,
         message: "Authorization token Invalid",
       });
@@ -71,7 +71,7 @@ export const verify = async (req, res) => {
       decode = jwt.verify(token, process.env.SECRET_KEY);
     } catch (error) {
       if (error.name === "TokenExpiredError") {
-        res.status(400).json({
+        return res.status(400).json({
           status: false,
           message: "The registration token has expired",
         });
@@ -98,7 +98,7 @@ export const verify = async (req, res) => {
       message: "User email verified successfully",
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       status: false,
       message: error.message,
     });
@@ -110,7 +110,7 @@ export const reVerify = async (req, res) => {
     const { email } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
-      res.status(400).json({
+      return res.status(400).json({
         status: false,
         message: "User not found",
       });
@@ -122,7 +122,7 @@ export const reVerify = async (req, res) => {
     verifyEmail(token, user.email); // send email verify here
     user.token = token;
     await user.save();
-    res.status(200).json({
+    return res.status(200).json({
       status: true,
       message: "Verification email sent again successfully",
       token: user.token,
@@ -140,7 +140,7 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "All fields are required",
       });
@@ -148,7 +148,7 @@ export const login = async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (!existingUser) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "User not found",
       });
@@ -161,14 +161,14 @@ export const login = async (req, res) => {
     );
 
     if (!isPasswordValid) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "Invalid credentials",
       });
     }
 
     if (!existingUser.isVerified) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "Verify your account then try to login",
       });
@@ -196,7 +196,7 @@ export const login = async (req, res) => {
     }
 
     await Session.create({ userId: existingUser.id });
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: `Welcome Back ${existingUser.firstName}`,
       user: existingUser,
@@ -204,7 +204,7 @@ export const login = async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -223,7 +223,7 @@ export const logout = async (req, res) => {
       message: "User logout successfully",
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -236,7 +236,7 @@ export const forgotPassword = async (req, res) => {
 
     const user = await User.findOne({ email })
     if(!user){
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "User with this email not found",
       });
@@ -255,7 +255,7 @@ export const forgotPassword = async (req, res) => {
       message: "OTP send to email successfully",
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -268,7 +268,7 @@ export const verifyOtp = async(req, res) => {
     const { otp } = req.body;
     const email = req.params.email;
     if(!otp){
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "OTP is required",
       });
@@ -276,7 +276,7 @@ export const verifyOtp = async(req, res) => {
 
     const user = await User.findOne({ email });
     if(!user){
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "User email not found",
       });
@@ -284,7 +284,7 @@ export const verifyOtp = async(req, res) => {
 
 
     if(!user.otp || !user.otpExpiry){
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "OTP is not generated or already verified",
       });
@@ -298,7 +298,7 @@ export const verifyOtp = async(req, res) => {
     }
 
     if(otp !== user.otp){
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "OTP is invalid",
       });
@@ -313,7 +313,7 @@ export const verifyOtp = async(req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -327,21 +327,21 @@ export const changePassword = async(req, res) => {
 
     const user = await User.findOne({ email });
     if(!user){
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "User email not found",
       });
     }
 
     if(!newPassword || !confirmPassword){
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "All fields are required",
       });
     }
 
      if(newPassword !== confirmPassword){
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "Password does not match",
       });
@@ -356,7 +356,7 @@ export const changePassword = async(req, res) => {
       message: "Password changed successfully",
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -372,7 +372,7 @@ export const allUsers = async(req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -386,7 +386,7 @@ export const getUserById = async(req, res) => {
     const user = await User.findById(userId).select("-password -otp -otpExpiry -token");
 
     if(!user){
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "User not found",
       });
@@ -399,7 +399,7 @@ export const getUserById = async(req, res) => {
     })
 
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
