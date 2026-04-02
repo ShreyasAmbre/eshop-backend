@@ -60,7 +60,7 @@ export const verify = async (req, res) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer")) {
       return res.status(400).json({
-        status: false,
+        success: false,
         message: "Authorization token Invalid",
       });
     }
@@ -72,19 +72,19 @@ export const verify = async (req, res) => {
     } catch (error) {
       if (error.name === "TokenExpiredError") {
         return res.status(400).json({
-          status: false,
+          success: false,
           message: "The registration token has expired",
         });
       }
       return res.status(400).json({
-        status: false,
+        success: false,
         message: "Token verification failed",
       });
     }
     const user = await User.findById(decode.id);
     if (!user) {
       return res.status(400).json({
-        status: false,
+        success: false,
         message: "User not found",
       });
     }
@@ -94,12 +94,12 @@ export const verify = async (req, res) => {
 
     await user.save();
     return res.status(200).json({
-      status: true,
+      success: true,
       message: "User email verified successfully",
     });
   } catch (error) {
     return res.status(500).json({
-      status: false,
+      success: false,
       message: error.message,
     });
   }
@@ -111,7 +111,7 @@ export const reVerify = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({
-        status: false,
+        success: false,
         message: "User not found",
       });
     }
@@ -123,13 +123,13 @@ export const reVerify = async (req, res) => {
     user.token = token;
     await user.save();
     return res.status(200).json({
-      status: true,
+      success: true,
       message: "Verification email sent again successfully",
       token: user.token,
     });
   } catch (error) {
     return res.status(500).json({
-      status: false,
+      success: false,
       message: error.message,
     });
   }
